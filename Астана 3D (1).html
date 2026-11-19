@@ -1,0 +1,556 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Астана 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Montserrat:wght@200;300;400&display=swap">
+<style>
+/* Layout: a fixed WebGL stage sits behind scrolling text. One landmark model per section, text on the left, model on the right (above the text on phones). */
+:root {
+  --bg: #DCE2E8;
+  --fg: #10161D;
+  --muted: #55616D;
+  --line: rgba(16, 22, 29, 0.16);
+  --model: #FFFFFF;
+  --accent: #B8913A;
+  --shadow-a: 0.16;
+  --font-display: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1218;
+    --fg: #E9EEF3;
+    --muted: #93A0AD;
+    --line: rgba(233, 238, 243, 0.18);
+    --model: #CBD5DF;
+    --accent: #D8B25A;
+    --shadow-a: 0.5;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1218;
+  --fg: #E9EEF3;
+  --muted: #93A0AD;
+  --line: rgba(233, 238, 243, 0.18);
+  --model: #CBD5DF;
+  --accent: #D8B25A;
+  --shadow-a: 0.5;
+  color-scheme: dark;
+}
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.7;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-font-smoothing: antialiased;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+  pointer-events: none;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  padding-bottom: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.mark {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 1.05rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg);
+  text-decoration: none;
+}
+nav { display: flex; gap: 20px; }
+nav a {
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  padding-block: 4px;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+nav a:hover, nav a:focus-visible { color: var(--fg); border-color: var(--accent); outline: none; }
+.mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+main { position: relative; z-index: 1; }
+
+.panel {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding-block: 120px 72px;
+}
+.panel.hero { min-height: 94svh; }
+.copy { width: min(30rem, 100%); min-width: 0; }
+.copy.wide { width: min(36rem, 100%); }
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 22px;
+}
+.eyebrow::before { content: ""; width: 36px; height: 1px; background: var(--accent); }
+
+h1, h2 {
+  font-family: var(--font-display);
+  font-weight: 200;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin-bottom: 26px;
+}
+h1 { font-size: clamp(3.6rem, 12vw, 8.5rem); }
+h2 { font-size: clamp(2.3rem, 6vw, 4rem); font-weight: 300; }
+
+p.lede { color: var(--muted); font-size: 1.06rem; max-width: 28rem; text-wrap: pretty; }
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 44px;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.facts div { min-width: 0; }
+.facts dt {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.facts dd {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 1.7rem;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  margin-top: 44px;
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+ol.timeline { list-style: none; border-top: 1px solid var(--line); }
+ol.timeline li {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 8px 20px;
+  padding-block: 20px;
+  border-bottom: 1px solid var(--line);
+}
+ol.timeline time {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+ol.timeline p { color: var(--muted); min-width: 0; }
+ol.timeline strong { color: var(--fg); font-weight: 500; }
+
+footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--line);
+  padding-block: 56px 72px;
+}
+footer p.big {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  line-height: 1.25;
+  max-width: 34rem;
+  text-wrap: balance;
+}
+footer p.small { margin-top: 18px; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.06em; }
+
+p.body { color: var(--muted); max-width: 28rem; margin-top: 16px; text-wrap: pretty; }
+.part { color: var(--accent); }
+@media (max-width: 820px) {
+  nav { display: none; }
+  .panel { align-items: flex-end; padding-block: 120px 40px; min-height: 100svh; }
+  .panel.hero { min-height: 100svh; }
+  h1 { font-size: clamp(3.4rem, 17vw, 5.5rem); }
+  .facts dd { font-size: 1.4rem; }
+  .hint { margin-top: 28px; }
+}
+</style>
+
+<header>
+  <a class="mark" href="#top">Астана</a>
+  <nav aria-label="Бөлімдер">
+    <a href="#top">Кіріспе</a>
+    <a href="#baiterek">Бәйтерек</a>
+    <a href="#shatyr">Хан Шатыр</a>
+    <a href="#nur-astana">Нұр-Астана</a>
+    <a href="#tarih">Тарих</a>
+    <a href="#qorytyndy">Қорытынды</a>
+  </nav>
+</header>
+
+<canvas id="stage" aria-hidden="true"></canvas>
+
+<main id="top">
+  <section class="panel hero" data-model="baiterek">
+    <div class="copy">
+      <div class="eyebrow"><span class="part">Кіріспе</span> · Қазақстанның елордасы</div>
+      <h1>Астана</h1>
+      <p class="lede">Астана — Қазақстанның солтүстігінде, Есіл өзенінің жағасында орналасқан елорда. Қала 1997 жылы елорда мәртебесін алып, қысқа мерзімде елдің саяси, мәдени және іскерлік орталығына айналды.</p>
+      <p class="body">Бұл бетте Астананың үш басты символы — Бәйтерек, Хан Шатыр және Нұр-Астана мешіті — үш өлшемді модель түрінде көрсетілген. Әр бөлімде ғимараттың идеясы, құрылымы және қала үшін маңызы айтылады, соңында қала тарихы мен қорытынды беріледі.</p>
+      <dl class="facts">
+        <div><dt>Орналасқан жері</dt><dd>Есіл өзені</dd></div>
+        <div><dt>Елорда болған жылы</dt><dd>1997</dd></div>
+        <div><dt>Халқы</dt><dd>1,4 млн+</dd></div>
+      </dl>
+      <p class="hint">Төмен жылжыңыз. Модель айналады</p>
+    </div>
+  </section>
+
+  <section class="panel" id="baiterek" data-model="baiterek">
+    <div class="copy">
+      <div class="eyebrow"><span class="part">Негізгі бөлім · 1</span> · Символ</div>
+      <h2>Бәйтерек</h2>
+      <p class="lede">Өмір ағашы туралы қазақ аңызынан туған монумент. Төбесіндегі алтын шар Самұрық құсының жұмыртқасын бейнелейді. Шолу алаңы 97 метр биіктікте, бұл қаланың 1997 жылы елорда болғанын еске салады.</p>
+      <p class="body">Монумент Нұржол бульварының басында тұр да, қаланың бас осін айқындайды. Тіреулері ағаш тамырындай жерден көтеріліп, бір діңге тоғысады. Шолу алаңынан Есіл жағалауындағы екі өңірдің панорамасы көрінеді, сондықтан Бәйтерек қонақтар үшін қаланы танысудың бастапқы нүктесі болып саналады.</p>
+      <dl class="facts">
+        <div><dt>Жалпы биіктігі</dt><dd>105 м</dd></div>
+        <div><dt>Шолу алаңы</dt><dd>97 м</dd></div>
+        <div><dt>Шар диаметрі</dt><dd>~22 м</dd></div>
+        <div><dt>Салынған жылы</dt><dd>2002</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="panel" id="shatyr" data-model="shatyr">
+    <div class="copy">
+      <div class="eyebrow"><span class="part">Негізгі бөлім · 2</span> · Сәулет</div>
+      <h2>Хан Шатыр</h2>
+      <p class="lede">Британ сәулетшісі Норман Фостер жобалаған шатыр тәрізді сауда және демалыс орталығы. Ішінде дүкендер мен жасанды жағажай бар.</p>
+      <p class="body">Ғимараттың қабығы ETFE деп аталатын мөлдір әрі жеңіл материалдан жасалған. Ол күн сәулесін өткізіп, қыстың қатты аязында да ішкі кеңістікті жылы ұстайды. Сондықтан қала тұрғындары жыл бойы жайлы ортада серуендеп, демала алады. Жағажайдың құмы Мальдив аралдарынан әкелінген.</p>
+      <dl class="facts">
+        <div><dt>Биіктігі</dt><dd>150 м</dd></div>
+        <div><dt>Ашылған жылы</dt><dd>2010</dd></div>
+        <div><dt>Қабығы</dt><dd>ETFE</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="panel" id="nur-astana" data-model="mosque">
+    <div class="copy">
+      <div class="eyebrow"><span class="part">Негізгі бөлім · 3</span> · Мәдениет</div>
+      <h2>Нұр-Астана</h2>
+      <p class="lede">Елордадағы басты мешіттердің бірі. Ақ күмбезі мен төрт мұнарасы Есіл жағалауындағы қала бейнесін толықтырады.</p>
+      <p class="body">Мешіт дәстүрлі исламдық сәулет үлгісін заманауи қала көрінісімен үйлестіреді. Ішкі залға шамамен бес мың адам сыяды, сондықтан мереке намаздарында да, күнделікті ғибадатта да қолданылады. Нұр-Астана қаланың рухани өмірінде маңызды орын алады.</p>
+      <dl class="facts">
+        <div><dt>Ашылған жылы</dt><dd>2005</dd></div>
+        <div><dt>Мұнара биіктігі</dt><dd>63 м</dd></div>
+        <div><dt>Сыйымдылығы</dt><dd>~5 000</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="panel" id="tarih" data-model="baiterek">
+    <div class="copy wide">
+      <div class="eyebrow"><span class="part">Негізгі бөлім · 4</span> · Хронология</div>
+      <h2>Атаулар мен белестер</h2>
+      <p class="lede">Қала екі ғасырға жуық уақытта бірнеше рет атын өзгертті. Төменде басты кезеңдер берілген.</p>
+      <ol class="timeline" style="margin-top:24px">
+        <li><time>1830</time><p><strong>Негізі қаланды.</strong> Қала Ақмолинск әскери бекінісі ретінде пайда болды.</p></li>
+        <li><time>1961</time><p><strong>Целиноград.</strong> Тың игеру кезеңінде қала жаңа атау алды.</p></li>
+        <li><time>1992</time><p><strong>Ақмола.</strong> Тәуелсіздіктен кейін қалаға Ақмола атауы қайтарылды.</p></li>
+        <li><time>1997</time><p><strong>Елорда мәртебесі.</strong> 10 желтоқсанда Ақмола Қазақстанның елордасы болды.</p></li>
+        <li><time>1998</time><p><strong>Астана атауы.</strong> Қала жаңа атау алып, 10 маусымда халықаралық таныстырылымы өтті. Бас жоспар конкурсын жапон сәулетшісі Кисё Курокава жеңіп алды.</p></li>
+        <li><time>2017</time><p><strong>EXPO-2017.</strong> Астанада халықаралық мамандандырылған көрме өтті.</p></li>
+        <li><time>2019</time><p><strong>Нұр-Сұлтан.</strong> Елорданың атауы өзгертілді.</p></li>
+        <li><time>2022</time><p><strong>Астана.</strong> Тарихи атау қайтарылды.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="panel" id="qorytyndy" data-model="baiterek">
+    <div class="copy">
+      <div class="eyebrow"><span class="part">Қорытынды</span></div>
+      <h2>Болашаққа бағыт</h2>
+      <p class="lede">Астананың тарихы қысқа болғанымен, символдары айқын. Бәйтерек аңыз бен елорда мәртебесін, Хан Шатыр заманауи инженерия мен сәулетті, Нұр-Астана рухани мұра мен дәстүрді бейнелейді.</p>
+      <p class="body">Осы үш нысан қаланың бет-бейнесін құрап, өткенін, бүгінін және болашаққа ұмтылысын бір кеңістікке біріктіреді. Сондықтан Астананы тек елорда деп емес, тәуелсіз Қазақстанның даму жолын көрсететін көрнекі айғақ деп қарастыруға болады.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p class="big">Астана — тәуелсіз Қазақстанның даму символы.</p>
+  <p class="small">Есіл өзенінің жағасы, Қазақстан</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  if (!window.THREE) return;
+  var canvas = document.getElementById('stage');
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  } catch (e) { return; }
+
+  var reduced = false;
+  try { reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+  camera.position.set(0, 2.4, 12);
+  camera.lookAt(0, 0, 0);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8f9db0, 0.85));
+  var sun = new THREE.DirectionalLight(0xffffff, 0.95);
+  sun.position.set(5, 9, 6);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.camera.left = -6; sun.shadow.camera.right = 6;
+  sun.shadow.camera.top = 6; sun.shadow.camera.bottom = -6;
+  sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 30;
+  sun.shadow.bias = -0.0008;
+  scene.add(sun);
+
+  var matBody = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0 });
+  var matAccent = new THREE.MeshStandardMaterial({ color: 0xb8913a, roughness: 0.35, metalness: 0.35 });
+  var matShell = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0, side: THREE.DoubleSide });
+  var matShadow = new THREE.ShadowMaterial({ opacity: 0.16 });
+  var matRing = new THREE.MeshBasicMaterial({ color: 0xb8913a, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
+
+  function mesh(geo, mat) {
+    var m = new THREE.Mesh(geo, mat);
+    m.castShadow = true;
+    return m;
+  }
+  function limb(a, b, r1, r2, mat) {
+    var dir = new THREE.Vector3().subVectors(b, a);
+    var len = dir.length();
+    var m = mesh(new THREE.CylinderGeometry(r2, r1, len, 12), mat);
+    m.position.copy(a).add(b).multiplyScalar(0.5);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+    return m;
+  }
+  function V(x, y, z) { return new THREE.Vector3(x, y, z); }
+
+  /* Every model sits on the same ground disc and thin ring, so swapping reads as one object morphing. */
+  function wrap(inner, height, base) {
+    var holder = new THREE.Group();
+    var pivot = new THREE.Group();
+    pivot.position.y = -height / 2;
+    var disc = new THREE.Mesh(new THREE.CircleGeometry(3.4, 96), matShadow);
+    disc.rotation.x = -Math.PI / 2;
+    disc.receiveShadow = true;
+    pivot.add(disc);
+    var ring = new THREE.Mesh(new THREE.RingGeometry(3.385, 3.4, 128), matRing);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.002;
+    pivot.add(ring);
+    pivot.add(inner);
+    holder.add(pivot);
+    return { group: holder, base: base, s: 0.0001 };
+  }
+
+  function buildBaiterek() {
+    var g = new THREE.Group();
+    var i, a;
+    for (i = 0; i < 8; i++) {
+      a = i / 8 * Math.PI * 2;
+      g.add(limb(V(Math.cos(a) * 1.5, 0, Math.sin(a) * 1.5), V(Math.cos(a) * 0.22, 3.1, Math.sin(a) * 0.22), 0.05, 0.05, matBody));
+    }
+    g.add(limb(V(0, 0, 0), V(0, 4.3, 0), 0.2, 0.2, matBody));
+    for (i = 0; i < 8; i++) {
+      a = i / 8 * Math.PI * 2 + Math.PI / 8;
+      g.add(limb(V(Math.cos(a) * 0.22, 3.1, Math.sin(a) * 0.22), V(Math.cos(a) * 0.85, 4.35, Math.sin(a) * 0.85), 0.045, 0.045, matBody));
+    }
+    var ball = mesh(new THREE.SphereGeometry(0.72, 48, 32), matAccent);
+    ball.position.y = 4.95;
+    g.add(ball);
+    g.add(limb(V(0, 5.6, 0), V(0, 6.5, 0), 0.05, 0.012, matBody));
+    return wrap(g, 6.5, 0.78);
+  }
+
+  function buildShatyr() {
+    var g = new THREE.Group();
+    var H = 3.6, pts = [], t, r;
+    for (var i = 0; i <= 40; i++) {
+      t = i / 40;
+      r = 2.1 * Math.pow(1 - t, 1.6) + 0.03;
+      pts.push(new THREE.Vector2(r, t * H));
+    }
+    g.add(mesh(new THREE.LatheGeometry(pts, 72), matShell));
+    var plinth = mesh(new THREE.CylinderGeometry(2.3, 2.3, 0.12, 72), matBody);
+    plinth.position.y = 0.06;
+    g.add(plinth);
+    [0.22, 0.42, 0.62, 0.8].forEach(function (u) {
+      var rr = 2.1 * Math.pow(1 - u, 1.6) + 0.03;
+      var ringMesh = new THREE.Mesh(new THREE.TorusGeometry(rr, 0.012, 8, 96), matRing);
+      ringMesh.rotation.x = Math.PI / 2;
+      ringMesh.position.y = u * H;
+      g.add(ringMesh);
+    });
+    g.add(limb(V(0, H - 0.05, 0), V(0, H + 1, 0), 0.04, 0.01, matBody));
+    return wrap(g, H + 1, 1.2);
+  }
+
+  function buildMosque() {
+    var g = new THREE.Group();
+    var plinth = mesh(new THREE.BoxGeometry(3.4, 0.14, 3.4), matBody);
+    plinth.position.y = 0.07;
+    g.add(plinth);
+    var body = mesh(new THREE.BoxGeometry(2.1, 1.1, 2.1), matBody);
+    body.position.y = 0.69;
+    g.add(body);
+    var drum = mesh(new THREE.CylinderGeometry(0.82, 0.82, 0.35, 64), matBody);
+    drum.position.y = 1.415;
+    g.add(drum);
+    var dome = mesh(new THREE.SphereGeometry(0.88, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2), matBody);
+    dome.position.y = 1.59;
+    dome.scale.y = 1.15;
+    g.add(dome);
+    g.add(limb(V(0, 2.55, 0), V(0, 3.05, 0), 0.025, 0.01, matAccent));
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (c) {
+      var x = c[0] * 1.5, z = c[1] * 1.5;
+      g.add(limb(V(x, 0.14, z), V(x, 2.7, z), 0.1, 0.075, matBody));
+      var bal = mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 24), matBody);
+      bal.position.set(x, 2.15, z);
+      g.add(bal);
+      var cap = mesh(new THREE.ConeGeometry(0.1, 0.55, 24), matBody);
+      cap.position.set(x, 2.98, z);
+      g.add(cap);
+      var tip = mesh(new THREE.SphereGeometry(0.03, 12, 8), matAccent);
+      tip.position.set(x, 3.28, z);
+      g.add(tip);
+    });
+    return wrap(g, 3.3, 1.12);
+  }
+
+  var stageGroup = new THREE.Group();
+  scene.add(stageGroup);
+  var models = {
+    baiterek: buildBaiterek(),
+    shatyr: buildShatyr(),
+    mosque: buildMosque()
+  };
+  Object.keys(models).forEach(function (k) { stageGroup.add(models[k].group); });
+
+  var active = 'baiterek';
+  var stageScale = 1;
+  var px = 0, py = 0;
+
+  function layout() {
+    var w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    var wide = w > 820 && w / h > 1.05;
+    stageGroup.position.set(wide ? 2.3 : 0, wide ? 0 : 1.35, 0);
+    stageScale = wide ? 1 : 0.62;
+  }
+
+  function readTheme() {
+    try {
+      var cs = getComputedStyle(document.documentElement);
+      var c = function (n) { return cs.getPropertyValue(n).trim(); };
+      matBody.color.set(c('--model'));
+      matShell.color.set(c('--model'));
+      matAccent.color.set(c('--accent'));
+      matRing.color.set(c('--accent'));
+      var a = parseFloat(c('--shadow-a'));
+      if (!isNaN(a)) matShadow.opacity = a;
+    } catch (e) {}
+  }
+
+  layout();
+  readTheme();
+  window.addEventListener('resize', layout);
+  try {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readTheme);
+    new MutationObserver(readTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  } catch (e) {}
+
+  window.addEventListener('pointermove', function (e) {
+    px = e.clientX / window.innerWidth - 0.5;
+    py = e.clientY / window.innerHeight - 0.5;
+  }, { passive: true });
+
+  try {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting && models[en.target.dataset.model]) active = en.target.dataset.model;
+      });
+    }, { rootMargin: '-45% 0px -45% 0px' });
+    document.querySelectorAll('[data-model]').forEach(function (el) { io.observe(el); });
+  } catch (e) {}
+
+  var first = true;
+  function frame(t) {
+    requestAnimationFrame(frame);
+    var k = (reduced || first) ? 1 : 0.08;
+    Object.keys(models).forEach(function (key) {
+      var m = models[key];
+      var target = (key === active ? m.base : 0.0001) * stageScale;
+      m.s += (target - m.s) * k;
+      m.group.scale.setScalar(Math.max(m.s, 0.0001));
+      m.group.visible = m.s > 0.01;
+    });
+    var rotY = (reduced ? 0 : t * 0.00012) + window.scrollY * 0.0016;
+    stageGroup.rotation.y += (rotY - stageGroup.rotation.y) * (first ? 1 : 0.12);
+    stageGroup.rotation.x += (py * 0.18 - stageGroup.rotation.x) * 0.05;
+    stageGroup.position.z = px * 0.0;
+    renderer.render(scene, camera);
+    first = false;
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
